@@ -1,0 +1,3 @@
+#!/usr/bin/dumb-init /bin/bash
+
+node app.js -p 4000
