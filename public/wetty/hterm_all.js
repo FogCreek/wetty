@@ -5736,26 +5736,64 @@ hterm.Keyboard.prototype.onBlur_ = function(e) {
 };
 
 hterm.Keyboard.prototype.onKeyUp_ = function(e) {
-  if (e.keyCode == 18)
+  this.setKeyCode(e)
+
+  if (e._keyCode == 18)
     this.altKeyPressed = this.altKeyPressed & ~(1 << (e.location - 1));
 
-  if (e.keyCode == 27)
+  if (e._keyCode == 27)
     this.preventChromeAppNonShiftDefault_(e);
 };
+
+// check if we are on iOS, it is needed to make the space bar work
+hterm.Keyboard.prototype.isIOS = function() {
+  if (!this._isIOS) {
+    var userAgent = navigator.userAgent || navigator.vendor || window.opera
+    this._isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream
+  }
+  return this._isIOS
+}
+
+hterm.Keyboard.prototype.setKeyCode = function (e) {
+  switch (e.key) {
+    case "UIKeyInputEscape":
+      e._keyCode = 27
+      break
+    case "UIKeyInputLeftArrow":
+      e._keyCode = 37
+      break
+    case "UIKeyInputUpArrow":
+      e._keyCode = 38
+      break
+    case "UIKeyInputRightArrow":
+      e._keyCode = 39
+      break
+    case "UIKeyInputDownArrow":
+      e._keyCode = 40
+      break
+    default:
+      e._keyCode = e.keyCode
+  }
+}
 
 /**
  * Handle onKeyDown events.
  */
 hterm.Keyboard.prototype.onKeyDown_ = function(e) {
-  if (e.keyCode == 18)
+  this.setKeyCode(e)
+
+  if (e._keyCode == 18)
     this.altKeyPressed = this.altKeyPressed | (1 << (e.location - 1));
 
-  if (e.keyCode == 27)
+  if (e._keyCode == 27)
     this.preventChromeAppNonShiftDefault_(e);
 
-  var keyDef = this.keyMap.keyDefs[e.keyCode];
+  if (this.isIOS() && e._keyCode == 32)
+    this.terminal.onVTKeystroke(' ');
+
+  var keyDef = this.keyMap.keyDefs[e._keyCode];
   if (!keyDef) {
-    console.warn('No definition for keyCode: ' + e.keyCode);
+    console.warn('No definition for keyCode: ' + e._keyCode);
     return;
   }
 
